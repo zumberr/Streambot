@@ -1,0 +1,15 @@
+{
+  "token": "<Discord Bot Token>",
+  "sources": {
+    "twitch": {
+      "clientId": "<Twitch Client Id>",
+      "clientSecret": "<Twitch Client Secret>",
+      "hostName": "hostname.com",
+      "port": 1500
+    },
+    "trovo": {
+      "clientId": "<Trovo Client Id>",
+      "clientSecret": "<Trovo Client Secret>"
+    }
+  }
+}
