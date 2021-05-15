@@ -20,7 +20,7 @@ export function runCommand(message: Message, params: string[]) {
           const SOURCES = Object.entries(Storage.settings.guilds[message.guild.id].sources).map(
             ([name, source]) =>
               `${name}: ${Object.values(source)
-                .map((streamer) => streamer.displayName)
+                .map((streamer) => sanitize(streamer.displayName))
                 .join(', ')}`,
           );
           message.channel.send(`Channels:\n${SOURCES.join('\n')}`);
@@ -32,12 +32,12 @@ export function runCommand(message: Message, params: string[]) {
           switch (params.shift()) {
             case 'twitch':
               TwitchSource.addStreamers(message.guild.id, params).subscribe((streamers) => {
-                message.channel.send(`Added ${streamers.length} Twitch channels`);
+                message.channel.send(`Added ${streamers.length} Twitch channel${streamers.length === 1 ? '' : 's'}`);
               });
               break;
             case 'trovo':
               TrovoSource.addStreamers(message.guild.id, params).subscribe((streamers) => {
-                message.channel.send(`Added ${streamers.length} Trovo channels`);
+                message.channel.send(`Added ${streamers.length} Trovo channel${streamers.length === 1 ? '' : 's'}`);
               });
               break;
             default:
@@ -51,11 +51,12 @@ export function runCommand(message: Message, params: string[]) {
           switch (params.shift()) {
             case 'twitch':
               TwitchSource.removeStreamers(message.guild.id, params).subscribe((streamers) => {
-                message.channel.send(`Added ${streamers.length} Twitch channels`);
+                message.channel.send(`Removed ${streamers.length} Twitch channel${streamers.length === 1 ? '' : 's'}`);
               });
               break;
             case 'trovo':
-              message.channel.send(`Added ${TrovoSource.removeStreamers(message.guild.id, params)} Trovo channels`);
+              const delstreamers_trovo_ammount = TrovoSource.removeStreamers(message.guild.id, params);
+              message.channel.send(`Removed ${delstreamers_trovo_ammount} Trovo channel${delstreamers_trovo_ammount === 1 ? '' : 's'}`);
               break;
             default:
               commandResult(message, 'FAIL');
