@@ -2,7 +2,7 @@ import { Client, MessageOptions, TextChannel } from 'discord.js';
 import moment from 'moment';
 import fetch from 'node-fetch';
 import { defer, EMPTY, interval, Observable, of, Subject, Subscription } from 'rxjs';
-import { catchError, filter, map, pairwise, switchMap, tap } from 'rxjs/operators';
+import { catchError, filter, map, switchMap, tap } from 'rxjs/operators';
 import { StreamerInfo } from '../../discord/discord-bot.interface';
 import { getNow } from '../../shared/utils';
 import { Storage } from '../../storage/storage';
@@ -142,7 +142,8 @@ export class TrovoSource {
 
   private static setStreamerSubscription(guildId: string, userId: string) {
     if (!this.subscriptions[guildId]) this.subscriptions[guildId] = {};
-    this.subscriptions[guildId][userId] = interval(5 * 60 * 1000)
+    let lastStream = { is_live: false, live_title: '' };
+    this.subscriptions[guildId][userId] = interval(Storage.settings.trovo.interval * 60 * 1000)
       .pipe(
         switchMap(() => {
           return defer(() =>
@@ -154,23 +155,17 @@ export class TrovoSource {
               },
               body: JSON.stringify({ channel_id: userId }),
             }),
-          ).pipe(
-            switchMap((response) => defer(() => response.json()) as Observable<TrovoChannel>),
-            pairwise(),
-            filter(([prev, next]) => {
-              if (!prev) {
-                return next.is_live;
-              } else {
-                const IS_NOW_LIVE = prev.is_live === false && next.is_live;
-                const TITLE_CHANGED = prev.live_title !== next.live_title;
-                return IS_NOW_LIVE || TITLE_CHANGED;
-              }
-            }),
-          );
+          ).pipe(switchMap((response) => defer(() => response.json()) as Observable<TrovoChannel>));
+        }),
+        filter((stream) => {
+          const IS_LIVE = !lastStream.is_live && stream.is_live;
+          const TITLE_CHANGED = stream.is_live && lastStream.live_title !== stream.live_title;
+          return IS_LIVE || TITLE_CHANGED;
         }),
       )
-      .subscribe(([prev, next]) => {
-        this.streamChanges.next({ guildId, userId, stream: next });
+      .subscribe((stream) => {
+        lastStream = { is_live: stream.is_live, live_title: stream.live_title };
+        this.streamChanges.next({ guildId, userId, stream });
       });
   }
 

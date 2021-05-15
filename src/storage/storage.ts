@@ -39,6 +39,9 @@ export class Storage {
   private static getDefaultSettings(): Settings {
     return {
       adminUsers: [],
+      trovo: {
+        interval: 2,
+      },
       guilds: {},
     };
   }
