@@ -92,7 +92,7 @@ export class TrovoSource {
                     embed: {
                       title: streamChanges.stream.live_title,
                       description: streamChanges.stream.channel_url,
-                      color: 15866215,
+                      color: 0x30c07b,
                       timestamp: new Date(),
                       footer: {
                         text: streamChanges.stream.category_name,

@@ -100,7 +100,7 @@ export class TwitchSource {
                     embed: {
                       title: streamChanges.stream.title,
                       description: `https://www.twitch.tv/${user?.displayName}`,
-                      color: 15866215,
+                      color: 0x9147ff,
                       timestamp: new Date(),
                       footer: {
                         text: game?.name,
