@@ -123,7 +123,7 @@ export class TwitchSource {
                         switchMap((msg) => {
                           if (msg === null) return defer(() => channel.send(msgOptions));
                           const MESSAGE_TIMESTAMP = moment(msg.embeds[0].timestamp);
-                          const THREE_HOURS_AGO = moment().subtract(3, 'hours');
+                          const THREE_HOURS_AGO = moment().subtract(6, 'hours');
                           return MESSAGE_TIMESTAMP.isAfter(THREE_HOURS_AGO)
                             ? defer(() => msg.edit(msgOptions))
                             : defer(() => channel.send(msgOptions));
