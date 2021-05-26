@@ -46,6 +46,7 @@ export class TrovoSource {
     }
     return this.getUsers(newStreamers).pipe(
       map((response) => {
+        if (response === null) return [];
         return response.users
           .filter((user) => newStreamers.includes(user.username))
           .map((user) => ({ userId: user.channel_id, displayName: user.username }));
@@ -81,14 +82,15 @@ export class TrovoSource {
     return this.streamChanges
       .pipe(
         tap((streamChanges) => {
-          const channelId = Storage.settings.guilds[streamChanges.guildId].channelId;
+          const settings = Storage.settings.guilds[streamChanges.guildId];
+          const channelId = settings.channelId;
           if (channelId) {
             defer(() => client.channels.fetch(channelId) as Promise<TextChannel>)
               .pipe(
                 catchError(() => EMPTY),
                 switchMap((channel) => {
                   const msgOptions: MessageOptions = {
-                    content: `¡**${streamChanges.stream.username}** prendió stream!`,
+                    content: settings.announcementMessage.replace('{DISPLAYNAME}', streamChanges.stream.username),
                     embed: {
                       title: streamChanges.stream.live_title,
                       description: streamChanges.stream.channel_url,
@@ -162,14 +164,16 @@ export class TrovoSource {
           const TITLE_CHANGED = stream.is_live && lastStream.live_title !== stream.live_title;
           return IS_LIVE || TITLE_CHANGED;
         }),
+        catchError(() => of(null)),
       )
       .subscribe((stream) => {
+        if (stream === null) return;
         lastStream = { is_live: stream.is_live, live_title: stream.live_title };
         this.streamChanges.next({ guildId, userId, stream });
       });
   }
 
-  private static getUsers(displayNames: string[]): Observable<TrovoGetUsersResponse> {
+  private static getUsers(displayNames: string[]): Observable<TrovoGetUsersResponse | null> {
     return defer(() =>
       fetch('https://open-api.trovo.live/openplatform/getusers', {
         method: 'POST',
@@ -179,6 +183,9 @@ export class TrovoSource {
         },
         body: JSON.stringify({ user: displayNames }),
       }),
-    ).pipe(switchMap((response) => defer(() => response.json())));
+    ).pipe(
+      switchMap((response) => defer(() => response.json())),
+      catchError(() => of(null)),
+    );
   }
 }

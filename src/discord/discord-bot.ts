@@ -41,7 +41,7 @@ export class Streambot {
   }
 
   private static onReady(): void {
-    this.client.user?.setActivity(``, { type: 'PLAYING' });
+    this.client.user?.setActivity(Storage.settings.botStatus, { type: 'PLAYING' });
     this.client.guilds.cache.forEach((guild) => {
       const settings = Storage.settings.guilds[guild.id];
       if (settings) {
@@ -93,6 +93,7 @@ export class Streambot {
     return {
       guildId: guild.id,
       guildName: guild.name,
+      announcementMessage: '',
       sources: {
         twitch: {},
         trovo: {},

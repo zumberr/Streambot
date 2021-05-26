@@ -13,6 +13,7 @@ export interface GuildSettings {
   guildName: string;
   guildId: string;
   channelId?: string;
+  announcementMessage: string;
   sources: Sources;
 }
 

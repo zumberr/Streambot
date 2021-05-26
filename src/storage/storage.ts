@@ -38,6 +38,7 @@ export class Storage {
 
   private static getDefaultSettings(): Settings {
     return {
+      botStatus: 'StreamBot',
       adminUsers: [],
       trovo: {
         interval: 2,

@@ -7,13 +7,21 @@ import { Storage } from '../storage/storage';
 export function runCommand(message: Message, params: string[]) {
   if (params.length) {
     switch (params.shift()) {
+      case 'setmessage':
+        if (!hasPermission(message)) return commandResult(message, 'FAIL');
+        if (message.guild) {
+          Storage.settings.guilds[message.guild.id].announcementMessage = params.join(' ');
+          Storage.saveSettings();
+          commandResult(message, 'SUCCESS');
+        } else commandResult(message, 'FAIL');
+        break;
       case 'setchannel':
         if (!hasPermission(message)) return commandResult(message, 'FAIL');
         if (message.guild) {
           Storage.settings.guilds[message.guild.id].channelId = message.channel.id;
           Storage.saveSettings();
           commandResult(message, 'SUCCESS');
-        }
+        } else commandResult(message, 'FAIL');
         break;
       case 'streamerlist':
         if (message.guild) {

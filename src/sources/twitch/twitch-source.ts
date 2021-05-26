@@ -85,7 +85,8 @@ export class TwitchSource {
     return this.streamChanges
       .pipe(
         tap((streamChanges) => {
-          const channelId = Storage.settings.guilds[streamChanges.guildId].channelId;
+          const settings = Storage.settings.guilds[streamChanges.guildId];
+          const channelId = settings.channelId;
           if (channelId) {
             combineLatest([
               defer(() => streamChanges.stream.getUser()),
@@ -96,7 +97,7 @@ export class TwitchSource {
                 catchError(() => EMPTY),
                 switchMap(([user, game, channel]) => {
                   const msgOptions: MessageOptions = {
-                    content: `¡**${user?.displayName}** prendió stream!`,
+                    content: settings.announcementMessage.replace('{DISPLAYNAME}', user?.displayName || ''),
                     embed: {
                       title: streamChanges.stream.title,
                       description: `https://www.twitch.tv/${user?.displayName}`,
