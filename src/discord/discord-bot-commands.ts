@@ -27,7 +27,7 @@ export function runCommand(message: Message, params: string[]) {
         if (message.guild) {
           const SOURCES = Object.entries(Storage.settings.guilds[message.guild.id].sources).map(
             ([name, source]) =>
-              `${name}: ${Object.values(source)
+              `${capitalize(name)}: ${Object.values(source)
                 .map((streamer) => sanitize(streamer.displayName))
                 .join(', ')}`,
           );
@@ -94,4 +94,8 @@ export function sanitize(text: string): string {
   const unescaped = text.replace(/\\(\*|_|`|~|\\)/g, '$1');
   const escaped = unescaped.replace(/(\*|_|`|~|\\)/g, '\\$1');
   return escaped;
+}
+
+export function capitalize(text: string): string {
+  return text.charAt(0).toUpperCase() + text.slice(1);
 }
