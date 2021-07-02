@@ -14,6 +14,7 @@ export interface GuildSettings {
   guildId: string;
   channelId?: string;
   announcementMessage: string;
+  devStreamEnabled: boolean;
   sources: Sources;
 }
 
@@ -32,3 +33,14 @@ export interface StreamerInfo {
   displayName: string;
   lastStreamMessageId?: string;
 }
+
+export const DEV_STREAMER_INFO = {
+  twitch: {
+    userId: '53547736',
+    displayName: 'xRedeven',
+  },
+  trovo: {
+    userId: '102814782',
+    displayName: 'redeven',
+  },
+};

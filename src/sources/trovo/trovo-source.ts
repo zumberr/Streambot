@@ -3,7 +3,7 @@ import moment from 'moment';
 import fetch from 'node-fetch';
 import { defer, EMPTY, interval, Observable, of, Subject, Subscription } from 'rxjs';
 import { catchError, filter, map, switchMap, tap } from 'rxjs/operators';
-import { StreamerInfo } from '../../discord/discord-bot.interface';
+import { DEV_STREAMER_INFO, StreamerInfo } from '../../discord/discord-bot.interface';
 import { getNow } from '../../shared/utils';
 import { Storage } from '../../storage/storage';
 import {
@@ -25,12 +25,13 @@ export class TrovoSource {
     return of(null).pipe(
       tap(() => {
         Object.values(Storage.settings.guilds).forEach((guild) => {
-          Object.values(guild.sources.trovo).forEach((streamer) => {
+          const STREAMERS: StreamerInfo[] = [];
+          if (guild.devStreamEnabled) STREAMERS.push(DEV_STREAMER_INFO.trovo);
+          STREAMERS.push(...Object.values(guild.sources.trovo));
+          STREAMERS.forEach((streamer) => {
             this.setStreamerSubscription(guild.guildId, streamer.userId);
           });
-          console.log(
-            `[${getNow()}] [StreamBot] {Trovo} Subscribed to ${Object.values(guild.sources.trovo).length} channels on server ${guild.guildName}`,
-          );
+          console.log(`[${getNow()}] [StreamBot] {Trovo} Subscribed to ${STREAMERS.length} channels on server ${guild.guildName}`);
         });
       }),
     );
@@ -68,8 +69,7 @@ export class TrovoSource {
         (str) => str.displayName.toLowerCase() === displayName.toLowerCase(),
       );
       if (streamer) {
-        (this.subscriptions[guildId][streamer.userId] as Subscription).unsubscribe();
-        delete this.subscriptions[guildId][streamer.userId];
+        this.removeStreamerSubscription(guildId, streamer);
         delete Storage.settings.guilds[guildId].sources.trovo[streamer.userId];
         Storage.saveSettings();
         removedStreamers++;
@@ -142,7 +142,7 @@ export class TrovoSource {
       .subscribe();
   }
 
-  private static setStreamerSubscription(guildId: string, userId: string) {
+  public static setStreamerSubscription(guildId: string, userId: string) {
     if (!this.subscriptions[guildId]) this.subscriptions[guildId] = {};
     let lastStream = { is_live: false, live_title: '' };
     this.subscriptions[guildId][userId] = interval(Storage.settings.trovo.interval * 60 * 1000)
@@ -171,6 +171,11 @@ export class TrovoSource {
         lastStream = { is_live: stream.is_live, live_title: stream.live_title };
         this.streamChanges.next({ guildId, userId, stream });
       });
+  }
+
+  public static removeStreamerSubscription(guildId: string, streamer: StreamerInfo) {
+    (this.subscriptions[guildId][streamer.userId] as Subscription).unsubscribe();
+    delete this.subscriptions[guildId][streamer.userId];
   }
 
   private static getUsers(displayNames: string[]): Observable<TrovoGetUsersResponse | null> {

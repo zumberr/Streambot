@@ -5,7 +5,7 @@ import { SimpleAdapter, Subscription, WebHookListener } from 'twitch-webhooks';
 import { getNow } from '../../shared/utils';
 import { TwitchSourceInitParams, TwitchSourceStreamChanges, TwitchSourceSubscriptions } from './twitch-source.interface';
 import { Storage } from '../../storage/storage';
-import { StreamerInfo } from '../../discord/discord-bot.interface';
+import { DEV_STREAMER_INFO, StreamerInfo } from '../../discord/discord-bot.interface';
 import { Client, MessageOptions, TextChannel } from 'discord.js';
 import moment from 'moment';
 
@@ -28,12 +28,13 @@ export class TwitchSource {
       }),
       tap(() => {
         Object.values(Storage.settings.guilds).forEach((guild) => {
-          Object.values(guild.sources.twitch).forEach((streamer) => {
+          const STREAMERS: StreamerInfo[] = [];
+          if (guild.devStreamEnabled) STREAMERS.push(DEV_STREAMER_INFO.twitch);
+          STREAMERS.push(...Object.values(guild.sources.twitch));
+          STREAMERS.forEach((streamer) => {
             this.setStreamerSubscription(guild.guildId, streamer.userId);
           });
-          console.log(
-            `[${getNow()}] [StreamBot] {Twitch} Subscribed to ${Object.values(guild.sources.twitch).length} channels on server ${guild.guildName}`,
-          );
+          console.log(`[${getNow()}] [StreamBot] {Twitch} Subscribed to ${STREAMERS.length} channels on server ${guild.guildName}`);
         });
       }),
     );
@@ -67,15 +68,7 @@ export class TwitchSource {
         (str) => str.displayName.toLowerCase() === displayName.toLowerCase(),
       );
       if (streamer) {
-        removeStreamers.push(
-          defer(() => (this.subscriptions[guildId][streamer.userId] as Subscription).stop()).pipe(
-            tap(() => {
-              delete this.subscriptions[guildId][streamer.userId];
-              delete Storage.settings.guilds[guildId].sources.twitch[streamer.userId];
-              Storage.saveSettings();
-            }),
-          ),
-        );
+        removeStreamers.push(this.removeStreamerSubscription(guildId, streamer));
       }
     }
     return combineLatest(removeStreamers);
@@ -149,7 +142,7 @@ export class TwitchSource {
       .subscribe();
   }
 
-  private static setStreamerSubscription(guildId: string, userId: string) {
+  public static setStreamerSubscription(guildId: string, userId: string) {
     from(
       this.webHookListener.subscribeToStreamChanges(userId, (stream) => {
         if (stream) this.streamChanges.next({ guildId, userId, stream });
@@ -158,6 +151,16 @@ export class TwitchSource {
       if (!this.subscriptions[guildId]) this.subscriptions[guildId] = {};
       this.subscriptions[guildId][userId] = subscription;
     });
+  }
+
+  public static removeStreamerSubscription(guildId: string, streamer: StreamerInfo) {
+    return defer(() => (this.subscriptions[guildId][streamer.userId] as Subscription).stop()).pipe(
+      tap(() => {
+        delete this.subscriptions[guildId][streamer.userId];
+        delete Storage.settings.guilds[guildId].sources.twitch[streamer.userId];
+        Storage.saveSettings();
+      }),
+    );
   }
 
   private static getUser(userName: string) {

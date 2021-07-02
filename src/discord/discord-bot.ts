@@ -94,6 +94,7 @@ export class Streambot {
       guildId: guild.id,
       guildName: guild.name,
       announcementMessage: '',
+      devStreamEnabled: false,
       sources: {
         twitch: {},
         trovo: {},
