@@ -26,7 +26,7 @@ export class TrovoSource {
       tap(() => {
         Object.values(Storage.settings.guilds).forEach((guild) => {
           const STREAMERS: StreamerInfo[] = [];
-          if (guild.devStreamEnabled) STREAMERS.push(DEV_STREAMER_INFO.trovo);
+          // if (guild.devStreamEnabled) STREAMERS.push(DEV_STREAMER_INFO.trovo);
           STREAMERS.push(...Object.values(guild.sources.trovo));
           STREAMERS.forEach((streamer) => {
             this.setStreamerSubscription(guild.guildId, streamer.userId);

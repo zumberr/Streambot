@@ -29,7 +29,7 @@ export class TwitchSource {
       tap(() => {
         Object.values(Storage.settings.guilds).forEach((guild) => {
           const STREAMERS: StreamerInfo[] = [];
-          if (guild.devStreamEnabled) STREAMERS.push(DEV_STREAMER_INFO.twitch);
+          // if (guild.devStreamEnabled) STREAMERS.push(DEV_STREAMER_INFO.twitch);
           STREAMERS.push(...Object.values(guild.sources.twitch));
           STREAMERS.forEach((streamer) => {
             this.setStreamerSubscription(guild.guildId, streamer.userId);
