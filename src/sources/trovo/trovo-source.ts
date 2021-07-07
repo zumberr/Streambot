@@ -144,7 +144,7 @@ export class TrovoSource {
 
   public static setStreamerSubscription(guildId: string, userId: string) {
     if (!this.subscriptions[guildId]) this.subscriptions[guildId] = {};
-    let lastStream = { is_live: false, live_title: '' };
+    let lastStream = { is_live: false, live_title: '', category_name: '' };
     this.subscriptions[guildId][userId] = interval(Storage.settings.trovo.interval * 60 * 1000)
       .pipe(
         switchMap(() => {
@@ -162,13 +162,14 @@ export class TrovoSource {
         filter((stream) => {
           const IS_LIVE = !lastStream.is_live && stream.is_live;
           const TITLE_CHANGED = stream.is_live && lastStream.live_title !== stream.live_title;
-          return IS_LIVE || TITLE_CHANGED;
+          const GAME_CHANGED = stream.is_live && lastStream.category_name !== stream.category_name;
+          return IS_LIVE || TITLE_CHANGED || GAME_CHANGED;
         }),
         catchError(() => of(null)),
       )
       .subscribe((stream) => {
         if (stream === null) return;
-        lastStream = { is_live: stream.is_live, live_title: stream.live_title };
+        lastStream = { is_live: stream.is_live, live_title: stream.live_title, category_name: stream.category_name };
         this.streamChanges.next({ guildId, userId, stream });
       });
   }
